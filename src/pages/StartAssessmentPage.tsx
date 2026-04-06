@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { startTransition, useDeferredValue, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -12,10 +12,16 @@ import {
   FiSearch,
   FiShield,
   FiUser,
+  FiX,
 } from "react-icons/fi";
 import { toast } from "sonner";
-import { requestTriageAssessment } from "../services";
-import type { TriageAssessmentInput, UrgencyLevel } from "../types";
+import {
+  getSymptomDisplayLabel,
+  getSymptomSuggestions,
+  requestTriageAssessment,
+  triageDataSummary,
+} from "../services";
+import type { SymptomSuggestion, TriageAssessmentInput, UrgencyLevel } from "../types";
 
 const ageRanges = ["0-17", "18-35", "36-55", "55+"] as const;
 const genderOptions = ["Female", "Male", "Non-binary / Other"] as const;
@@ -29,12 +35,12 @@ const conditionOptions = [
 
 const setupReasons = [
   {
-    title: "Details are reviewed together",
-    copy: "Age, health history, and symptoms are sent in one check so the guidance stays consistent.",
+    title: "Dataset-backed symptom matching",
+    copy: "The demo now runs on a local symptom-condition dataset, so it works without live AI calls.",
   },
   {
-    title: "Common conditions only",
-    copy: "The response is tuned toward likely everyday causes instead of dramatic worst-case guesses.",
+    title: "Autocomplete support",
+    copy: "Start typing a symptom, pick from the library, and the matcher cross-checks the selected symptoms instantly.",
   },
   {
     title: "Clear next steps",
@@ -77,7 +83,9 @@ export function StartAssessmentPage() {
     (typeof genderOptions)[number] | null
   >(null);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
-  const [symptoms, setSymptoms] = useState("");
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [symptomQuery, setSymptomQuery] = useState("");
+  const deferredSymptomQuery = useDeferredValue(symptomQuery);
 
   const triageMutation = useMutation({
     mutationFn: requestTriageAssessment,
@@ -102,6 +110,27 @@ export function StartAssessmentPage() {
     });
   };
 
+  const handleSymptomSelect = (symptomKey: SymptomSuggestion["key"]) => {
+    startTransition(() => {
+      setSelectedSymptoms((currentSymptoms) => {
+        if (currentSymptoms.includes(symptomKey)) {
+          return currentSymptoms;
+        }
+
+        return [...currentSymptoms, symptomKey];
+      });
+      setSymptomQuery("");
+    });
+  };
+
+  const handleSymptomRemove = (symptomKey: SymptomSuggestion["key"]) => {
+    startTransition(() => {
+      setSelectedSymptoms((currentSymptoms) =>
+        currentSymptoms.filter((currentSymptom) => currentSymptom !== symptomKey),
+      );
+    });
+  };
+
   const handleStartAssessment = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -110,8 +139,8 @@ export function StartAssessmentPage() {
       return;
     }
 
-    if (symptoms.trim().length < 10) {
-      toast.error("Describe the symptoms in a little more detail before searching.");
+    if (selectedSymptoms.length === 0) {
+      toast.error("Add at least one symptom before searching.");
       return;
     }
 
@@ -119,7 +148,8 @@ export function StartAssessmentPage() {
       ageRange: selectedAgeRange,
       gender: selectedGender,
       knownConditions: getKnownConditionsSummary(selectedConditions),
-      symptoms: symptoms.trim(),
+      selectedSymptoms,
+      symptoms: "",
     };
 
     await triageMutation.mutateAsync(payload);
@@ -128,6 +158,7 @@ export function StartAssessmentPage() {
   const cleanedKnownConditions = getKnownConditionsSummary(selectedConditions);
   const triageResult = triageMutation.data;
   const activeUrgencyTone = triageResult ? urgencyCopy[triageResult.urgency_level] : null;
+  const symptomSuggestions = getSymptomSuggestions(deferredSymptomQuery, selectedSymptoms);
 
   return (
     <main className="relative overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
@@ -324,29 +355,74 @@ export function StartAssessmentPage() {
                   </div>
                 </div>
 
-                <p className="mt-4 text-sm leading-6 text-slate-600">
-                  Describe the main symptom, when it started, how strong it feels, and
-                  anything that is getting worse.
-                </p>
+                <div className="mt-5 rounded-[1.5rem] border border-sky-100 bg-sky-50/90 p-4 text-sm text-slate-700">
+                  <p className="font-semibold text-slate-900">Demo data source</p>
+                  <p className="mt-2 leading-6">
+                    Autocomplete and matching are backed by {triageDataSummary.rowCount.toLocaleString()}{" "}
+                    public symptom profiles, {triageDataSummary.symptomCount} symptom terms, and{" "}
+                    {triageDataSummary.conditionCount} condition patterns.
+                  </p>
+                </div>
 
                 <label
                   className="mt-5 block text-sm font-semibold text-slate-700"
-                  htmlFor="assessment-symptoms"
+                  htmlFor="assessment-symptom-search"
                 >
-                  Symptom description
+                  Add symptoms from data
                 </label>
-                <textarea
-                  className="mt-2 min-h-44 w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white"
-                  id="assessment-symptoms"
-                  onChange={(event) => setSymptoms(event.target.value)}
-                  placeholder="Example: Fever for two days, dry cough, body pain, and mild shortness of breath that feels worse tonight."
-                  value={symptoms}
-                />
+                <div className="mt-2 rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-sky-400 focus-within:bg-white">
+                  <div className="flex items-center gap-3">
+                    <FiSearch className="shrink-0 text-slate-400" />
+                    <input
+                      autoComplete="off"
+                      className="w-full border-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                      id="assessment-symptom-search"
+                      onChange={(event) => setSymptomQuery(event.target.value)}
+                      placeholder="Search symptoms like fever, cough, rash, dizziness..."
+                      value={symptomQuery}
+                    />
+                  </div>
+                </div>
+
+                {selectedSymptoms.length > 0 ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {selectedSymptoms.map((symptomKey) => (
+                      <button
+                        className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-sky-800 transition hover:border-sky-400"
+                        key={symptomKey}
+                        onClick={() => handleSymptomRemove(symptomKey)}
+                        type="button"
+                      >
+                        <span>{getSymptomDisplayLabel(symptomKey)}</span>
+                        <FiX className="text-sm" />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {symptomSuggestions.map((suggestion) => (
+                    <button
+                      className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
+                      key={suggestion.key}
+                      onClick={() => handleSymptomSelect(suggestion.key)}
+                      type="button"
+                    >
+                      {suggestion.label}
+                    </button>
+                  ))}
+                </div>
+
+                {symptomSuggestions.length === 0 && deferredSymptomQuery.trim().length > 0 ? (
+                  <p className="mt-3 text-sm text-slate-500">
+                    No exact symptom match found. Try a simpler word.
+                  </p>
+                ) : null}
 
                 <div className="mt-5 flex flex-col gap-4 rounded-[1.5rem] bg-slate-950 px-5 py-4 text-sm text-slate-100 md:flex-row md:items-center md:justify-between">
                   <p className="max-w-2xl leading-6 text-slate-200">
-                    One search reviews the profile details and symptom text together before
-                    returning possible conditions, urgency, and next steps.
+                    One search cross-matches age, known conditions, and selected symptoms
+                    before returning possible conditions, urgency, and next steps.
                   </p>
 
                   <button
@@ -396,8 +472,8 @@ export function StartAssessmentPage() {
               </div>
 
               <div className="mt-6 rounded-3xl bg-slate-950 px-5 py-4 text-sm leading-6 text-slate-100">
-                The system stays calm and structured. It avoids definitive diagnosis and
-                always includes a medical disclaimer in the recommendation.
+                The demo stays deterministic and structured. It cross-matches the local dataset,
+                avoids definitive diagnosis, and always includes a medical disclaimer.
               </div>
             </motion.section>
 
@@ -438,6 +514,17 @@ export function StartAssessmentPage() {
                   </strong>
                 </div>
 
+                <div className="rounded-2xl bg-white/68 p-4">
+                  <p className="text-sm text-slate-500">Selected symptoms</p>
+                  <strong className="mt-2 block text-base text-slate-950">
+                    {selectedSymptoms.length > 0
+                      ? selectedSymptoms
+                          .map((symptomKey) => getSymptomDisplayLabel(symptomKey))
+                          .join(", ")
+                      : "None added"}
+                  </strong>
+                </div>
+
                 {!triageResult ? (
                   <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-600">
                     Results will appear here after you submit the combined symptom check.
@@ -459,6 +546,31 @@ export function StartAssessmentPage() {
                       <p className="mt-3 text-sm leading-6 text-slate-600">
                         {activeUrgencyTone?.description}
                       </p>
+                    </div>
+
+                    <div className="rounded-[1.75rem] border border-white/60 bg-white/75 p-5 shadow-[0_20px_48px_-34px_rgba(15,23,42,0.45)]">
+                      <div className="flex items-center gap-3">
+                        <div className="icon-chip">
+                          <FiSearch />
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500">Cross-matched symptoms</p>
+                          <strong className="mt-1 block text-lg text-slate-950">
+                            Symptoms found in the dataset
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {triageResult.matched_symptoms.map((symptom) => (
+                          <span
+                            className="rounded-full bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-800"
+                            key={symptom}
+                          >
+                            {symptom}
+                          </span>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="rounded-[1.75rem] border border-white/60 bg-white/75 p-5 shadow-[0_20px_48px_-34px_rgba(15,23,42,0.45)]">

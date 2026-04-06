@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "generate:triage-data": "node scripts/generate-triage-data.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
