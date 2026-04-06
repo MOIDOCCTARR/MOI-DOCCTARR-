@@ -356,7 +356,7 @@ VITE_APP_NAME=MOI DOCCTARR
 
 # ⚠️ Disclaimer
 
-> MOI DOCCTARR provides preliminary health guidance only and does not replace professional medical advice. Always consult a qualified healthcare professional.
+> MOI DOCTAR provides preliminary health guidance only and does not replace professional medical advice. Always consult a qualified healthcare professional.
 
 ---
 
