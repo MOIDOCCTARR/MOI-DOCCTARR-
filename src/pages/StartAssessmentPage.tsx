@@ -169,13 +169,23 @@ export function StartAssessmentPage() {
           initial={{ opacity: 0, y: -16 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <Link
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-sky-700"
-            to="/"
-          >
-            <FiArrowLeft className="text-base" />
-            Back to home
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-sky-700"
+              to="/"
+            >
+              <FiArrowLeft className="text-base" />
+              Back to home
+            </Link>
+
+            <Link
+              className="inline-flex items-center gap-2 text-sm font-semibold text-sky-700 transition hover:text-sky-900"
+              to="/project-overview"
+            >
+              <FiFileText className="text-base" />
+              Project overview
+            </Link>
+          </div>
 
           <div className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700 sm:self-auto">
             <FiShield />

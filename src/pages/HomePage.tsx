@@ -71,7 +71,7 @@ export function HomePage() {
             </h1>
 
             <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              MOI DOCCTARR helps people explain symptoms, understand urgency, and
+              MOI DOCTAR helps people explain symptoms, understand urgency, and
               get the next best action in seconds.
             </p>
 
@@ -82,6 +82,13 @@ export function HomePage() {
               >
                 Start Assessment
                 <FiArrowRight className="text-base" />
+              </Link>
+
+              <Link
+                className="secondary-button"
+                to="/project-overview"
+              >
+                Project Overview
               </Link>
 
               <a
@@ -244,7 +251,7 @@ export function HomePage() {
         </section>
 
         <footer className="px-2 pb-2 text-center text-sm text-slate-500">
-          MOI DOCCTARR provides preliminary health guidance and does not replace
+          MOI DOCTAR provides preliminary health guidance and does not replace
           professional medical advice.
         </footer>
       </div>
