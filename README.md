@@ -1,7 +1,7 @@
-# 🩺 MOI DOCCTARR — AI Health Triage Assistant
+# 🩺 MOI DOCTAR — AI Health Triage Assistant
 
 > **Fast. Accessible. Trustworthy.**
-> MOI DOCCTARR is a mobile-first AI-powered health triage assistant that helps users understand symptoms, assess urgency, and take the right next step — in seconds.
+> MOI DOCTAR is a mobile-first AI-powered health triage assistant that helps users understand symptoms, assess urgency, and take the right next step — in seconds.
 
 ---
 
@@ -34,7 +34,7 @@
 
 # 🧭 Product Overview
 
-**MOI DOCCTARR** bridges the gap between **uncertainty and informed health decisions**.
+**MOI DOCTAR** bridges the gap between **uncertainty and informed health decisions**.
 
 Users can:
 
