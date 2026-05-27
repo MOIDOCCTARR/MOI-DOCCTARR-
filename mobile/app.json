@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "MOI-DOCTAR",
+    "slug": "MOI-DOCTAR",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/adaptive-icon.jpeg"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.deathraider13.MOIDOCTAR"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fa347513-b064-4dc3-a3f4-29db62a68016"
+      }
+    }
+  }
+}
