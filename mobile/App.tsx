@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ConnectionLostScreen from './src/screens/ConnectionLostScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
@@ -25,7 +26,7 @@ export default function App() {
   }, []);
 
   return (
-    <>
+    <SafeAreaProvider>
       {screen === 'auth' && (
         <AuthScreen onLogin={() => setScreen('home')} />
       )}
@@ -91,7 +92,7 @@ export default function App() {
         />
       )}
       <StatusBar style="dark" />
-    </>
+    </SafeAreaProvider>
   );
 }
 

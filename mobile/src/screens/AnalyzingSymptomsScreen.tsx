@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Animated, ImageBackground } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated, ImageBackground } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const C = {
